@@ -13,7 +13,7 @@ public class MainActivity extends AppCompatActivity {
 
         this.findViewById(R.id.reset).setOnClickListener(v->{
             SwitchOfMadness som = this.findViewById(R.id.switch_of_madness);
-            som.invalidate();
+            som.resetPath();
         });
     }
 }

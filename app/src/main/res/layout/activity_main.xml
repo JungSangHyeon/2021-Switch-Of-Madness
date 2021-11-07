@@ -8,8 +8,8 @@
 
     <com.example.switchofmadness.SwitchOfMadness
         android:id="@+id/switch_of_madness"
-        android:layout_width="400dp"
-        android:layout_height="250dp"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
         android:clipChildren="false"
         android:clipToPadding="false"
         app:layout_constraintBottom_toBottomOf="parent"

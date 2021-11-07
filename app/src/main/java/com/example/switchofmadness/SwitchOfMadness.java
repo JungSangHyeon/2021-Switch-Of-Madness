@@ -3,6 +3,7 @@ package com.example.switchofmadness;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.AttributeSet;
@@ -11,11 +12,12 @@ import android.view.View;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class SwitchOfMadness extends View {
 
     private static final boolean DEBUG_MODE = true;
-    private static final int LEVEL = 3, LINE_THICK = 30, PADDING = 100;
+    private static final int LEVEL = 4, LINE_THICK = 30, PADDING = 100;
 
     private Point startPoint, endPoint;
     private ArrayList<Point> grid;
@@ -33,6 +35,18 @@ public class SwitchOfMadness extends View {
         this.createGrid();
     }
 
+    private Path generatePath() {
+        Random random = new Random();
+        Path path = new Path();
+        path.moveTo(startPoint.x, startPoint.y);
+        for(int i=0; i<LEVEL; i++){
+            Point randomPoint = grid.get(random.nextInt(grid.size()));
+            path.lineTo(grid.get(i).x, randomPoint.y);
+        }
+        path.lineTo(endPoint.x, endPoint.y);
+        return path;
+    }
+
     private void createGrid() {
         this.grid = new ArrayList<>();
         this.startPoint = new Point(getPaddingX(), getPaddingY()+getPaddingHeight()/2);
@@ -41,8 +55,8 @@ public class SwitchOfMadness extends View {
             this.grid.add(new Point(getPaddingX()+getPaddingWidth()/2, getPaddingY() + getPaddingHeight()/2));
         }else{
             int wUnit = this.getPaddingWidth() / (LEVEL+1), hUnit = this.getPaddingHeight()/(LEVEL-1);
-            for (int i = 0; i < LEVEL; i++) {
-                for (int j = 0; j < LEVEL; j++) {
+            for (int j = 0; j < LEVEL; j++) {
+                for (int i = 0; i < LEVEL; i++) {
                     this.grid.add(new Point(getPaddingX() + wUnit + i * wUnit, getPaddingY() + j * hUnit));
                 }
             }
@@ -55,6 +69,14 @@ public class SwitchOfMadness extends View {
         this.setPadding(50,50,50,50);
         if(DEBUG_MODE) drawBackground(canvas);
         if(DEBUG_MODE) drawPoints(canvas);
+
+        Paint paint = new Paint();
+        paint.setColor(this.getContext().getResources().getColor(R.color.teal_200, this.getContext().getTheme()));
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeJoin(Paint.Join.ROUND);
+        paint.setStrokeWidth(10);
+
+        canvas.drawPath(this.generatePath(), paint);
     }
 
     private void drawPoints(Canvas canvas) {

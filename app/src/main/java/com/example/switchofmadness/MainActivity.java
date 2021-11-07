@@ -3,7 +3,6 @@ package com.example.switchofmadness;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
-import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -18,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
         });
         this.findViewById(R.id.reset).setOnLongClickListener(v -> {
             SwitchOfMadness som = findViewById(R.id.switch_of_madness);
-            som.changeTest();
+            som.switchDebugMode();
             return false;
         });
     }

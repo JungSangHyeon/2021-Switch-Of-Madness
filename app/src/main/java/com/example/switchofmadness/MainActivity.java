@@ -3,6 +3,7 @@ package com.example.switchofmadness;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -11,14 +12,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        this.findViewById(R.id.reset).setOnClickListener(v->{
-            SwitchOfMadness som = this.findViewById(R.id.switch_of_madness);
-            som.resetPath();
-        });
-        this.findViewById(R.id.reset).setOnLongClickListener(v -> {
-            SwitchOfMadness som = findViewById(R.id.switch_of_madness);
-            som.switchDebugMode();
-            return false;
+        TextView textView = this.findViewById(R.id.textView);
+        SwitchOfMadness som = this.findViewById(R.id.switch_of_madness);
+        som.addOnChangeListener(on -> {
+            if(on) textView.setText("On");
+            else textView.setText("Off");
         });
     }
 }

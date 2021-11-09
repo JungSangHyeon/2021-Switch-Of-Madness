@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -14,14 +15,18 @@ import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.AnimationSet;
 
 import androidx.annotation.Nullable;
+import androidx.core.graphics.PathParser;
 
 import java.util.ArrayList;
 import java.util.Random;
 
 public class SwitchOfMadness extends View {
+
+    public interface OnChangeListener {
+        void onChange(boolean on);
+    }
 
     private static boolean DEBUG_MODE = false;
     private static final int LEVEL = 5, PATH_THICK = 30, PADDING = 100, OK_DISTANCE = 40, USER_SIZE = 80;
@@ -36,6 +41,11 @@ public class SwitchOfMadness extends View {
     public SwitchOfMadness(Context context, @Nullable AttributeSet attrs) { super(context, attrs); }
     public SwitchOfMadness(Context context, @Nullable AttributeSet attrs, int defStyleAttr) { super(context, attrs, defStyleAttr); }
 
+    OnChangeListener onChangeListener;
+    public void setOnChangeListener(OnChangeListener onChangeListener){
+        this.onChangeListener=onChangeListener;
+    }
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
@@ -43,7 +53,7 @@ public class SwitchOfMadness extends View {
     }
     private void initialize() {
         createGrid();
-        createPath();
+        createAndSetPath();
         updateUserPoint(startPoint.x, startPoint.y);
     }
 
@@ -93,9 +103,10 @@ public class SwitchOfMadness extends View {
             }
         }
     }
-    private void createPath() {
+    ArrayList<PointF> pathPoints;
+    private void createAndSetPath() {
         Random random = new Random();
-        ArrayList<PointF> pathPoints = new ArrayList<>();
+        pathPoints = new ArrayList<>();
         pathPoints.add(startPoint);
         for(int i=0; i<LEVEL; i++){
             PointF randomPoint = grid.get(random.nextInt(grid.size()));
@@ -197,7 +208,9 @@ public class SwitchOfMadness extends View {
             invalidate();
 
             double d = Math.sqrt(Math.pow(ex - endPoint.x, 2) + Math.pow(ey-endPoint.y, 2));
-            on = d<OK_DISTANCE;
+            boolean on = d<OK_DISTANCE;
+            if(on != this.on && onChangeListener!=null) onChangeListener.onChange(on);
+            this.on = on;
 
             if(isOffThePath()){
                 block = true;
@@ -221,13 +234,68 @@ public class SwitchOfMadness extends View {
                         block = false;
                     }
                 });
-                animatorSet.playTogether(translationX, translationY);
+//                animatorSet.playTogether(translationX, translationY);
+//                animatorSet.start();
+
+
+                Random random = new Random();
+                ArrayList<PointF> pathPoints2 = new ArrayList<>();
+                pathPoints2.add(startPoint);
+                for(int i=0; i<LEVEL; i++){
+                    PointF randomPoint = grid.get(random.nextInt(grid.size()));
+                    pathPoints2.add(new PointF(grid.get(i).x, randomPoint.y));
+                }
+                pathPoints2.add(endPoint);
+//                Path newPath = U_Path.getCurvePath(pathPoints);
+
+                ObjectAnimator objectAnimator = new ObjectAnimator();
+//                objectAnimator.setTarget(pathPoints);
+//                objectAnimator.setPropertyName("pathData");
+                objectAnimator.setObjectValues(pathPoints, pathPoints2);
+                objectAnimator.setEvaluator(new PathEvaluator());
+                objectAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        pathPoints = (ArrayList<PointF>) animation.getAnimatedValue();
+                        path = U_Path.getCurvePath(pathPoints);
+                    }
+                });
+                objectAnimator.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        pathApproximatePoints = path.approximate(0.05f);
+                    }
+                });
+                objectAnimator.setDuration(300);
+
+                animatorSet.playTogether(translationX, translationY, objectAnimator);
                 animatorSet.start();
             }
         }
     }
 
-    public void resetPath(){ createPath(); invalidate(); }
+    // 적오
+    // 1. Evaluator로 int, float 외에 내가 원하는것의 애니메이션을 만들 수 있어!
+    // 2. 이건 Path 의 예시야
+
+    public class PathEvaluator implements TypeEvaluator<ArrayList<PointF>> {
+
+        @Override
+        public ArrayList<PointF> evaluate(float fraction, ArrayList<PointF> startValue, ArrayList<PointF> endValue) {
+            ArrayList<PointF> result = new ArrayList<>();
+            for(int i=0; i<startValue.size(); i++){
+                result.add(new PointF(
+                        startValue.get(i).x + (endValue.get(i).x - startValue.get(i).x)*fraction,
+                        startValue.get(i).y + (endValue.get(i).y - startValue.get(i).y)*fraction
+                ));
+            }
+            return result;
+        }
+    }
+
+
+    public void resetPath(){ createAndSetPath(); invalidate(); }
     public void switchDebugMode() { DEBUG_MODE = !DEBUG_MODE; invalidate(); }
 
     private float getPaddingWidth(){ return this.getWidth()-PADDING*2; }

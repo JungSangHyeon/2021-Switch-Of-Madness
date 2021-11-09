@@ -3,6 +3,7 @@ package com.example.switchofmadness;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
@@ -12,11 +13,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        TextView textView = this.findViewById(R.id.textView);
+        ImageView imageView = this.findViewById(R.id.imageView);
         SwitchOfMadness som = this.findViewById(R.id.switch_of_madness);
         som.addOnChangeListener(on -> {
-            if(on) textView.setText("On");
-            else textView.setText("Off");
+            if(on) imageView.setImageResource(R.drawable.thug_newton);
+            else imageView.setImageResource(R.drawable.newton);
         });
     }
 }
